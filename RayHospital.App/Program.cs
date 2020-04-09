@@ -1,34 +1,46 @@
-﻿using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using RayHospital.Interfaces;
-using RayHospital.Resources;
+﻿using RayHospital.Interfaces;
+using System;
 
 namespace RayHospital.App
 {
-  class Program
-  {
-    /// This is a test application for the RayHospital booking system.
-    /// It will simulate a number of patient registrations happening on a number of days starting from today, and print the resulting consultations.
-    /// In a real application, the BookConsultation() and Consultations() methods would probably be called from controllers in a REST API.
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			var startDate = DateTime.Today;
 
-    static void Main(string[] args)
-    {
-      // TODO: Create implementation of IConsultationsManager and initialize using HospitalResources.
-      IConsultationsManager consultationsManager = null;
+			var patientRegistrations = new[]
+			{
+				new PatientRegistration(new Patient("Lucas", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
+				new PatientRegistration(new Patient("Sandra", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
+				new PatientRegistration(new Patient("Regina", new Cancer(CancerTopography.Breast)), startDate.AddDays(1)),
+				new PatientRegistration(new Patient("Jane", new Flu()), startDate.AddDays(1)),
+				new PatientRegistration(new Patient("Jack", new Flu()), startDate.AddDays(2)),
+			};
 
-      // Read hard-coded list of patients and book a consultation for each patient
-      DateTime startDate = DateTime.Today;
-      foreach (var registration in PatientRegistrations.Patients)
-      {
-        var registrationDate = startDate.AddDays(registration.OffsetDays);
-        var patient = new PatientRegistrationModel { Name = registration.Name, Condition = registration.Condition, Topography = registration.Topography };
-        var consultation = consultationsManager.BookConsultation(registrationDate, patient);
-      }
+			var rooms = new[]
+			{
+				new Room("RoomOne", TreatmentMachineCapability.None),
+				new Room("RoomTwo", TreatmentMachineCapability.None),
+				new Room("RoomThree", TreatmentMachineCapability.Advanced),
+				new Room("RoomFour", TreatmentMachineCapability.Simple)
+			};
 
-      // Print the resulting consultations
-      var consultations = consultationsManager.Consultations();
-      Console.WriteLine(JsonConvert.SerializeObject(consultations, Formatting.Indented, new IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd" }));
-    }
-  }
+			var doctors = new[]
+			{
+				new Doctor("John", new[] {DoctorRole.Oncologist}),
+				new Doctor("Anna", new[] {DoctorRole.GeneralPractitioner}),
+				new Doctor("Laura", new[] {DoctorRole.Oncologist, DoctorRole.GeneralPractitioner})
+			};
+
+			var hospital = new Hospital(doctors, rooms);
+
+			foreach(var patientRegistration in patientRegistrations)
+			{
+				var bookedConsultation = hospital.ScheduleConsultation(patientRegistration);
+
+				Console.WriteLine($"Booked consultation for {patientRegistration.Patient.Name} with {bookedConsultation.Doctor.Name} in room {bookedConsultation.Room.Name} at {bookedConsultation.ScheduledDate.ToShortDateString()}");
+			}
+		}
+	}
 }
