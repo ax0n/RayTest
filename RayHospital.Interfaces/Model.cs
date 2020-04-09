@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RayHospital.Interfaces
 {
+	public interface ITreater : INameable
+	{
+		IEnumerable<DoctorRole> Roles { get; }
+	}
 
 	public enum DoctorRole
 	{
@@ -12,7 +14,7 @@ namespace RayHospital.Interfaces
 		Oncologist
 	}
 
-	public class Doctor
+	public class Doctor : ITreater
 	{
 		public Doctor(string name, IEnumerable<DoctorRole> roles)
 		{
@@ -78,8 +80,12 @@ namespace RayHospital.Interfaces
 		}
 	}
 
+	public interface IPatient : INameable
+	{
+		ITreatableCondition TreatableCondition { get; }
+	}
 
-	public class Patient
+	public class Patient : IPatient
 	{
 		public Patient(string name, ITreatableCondition treatableCondition)
 		{
@@ -99,38 +105,54 @@ namespace RayHospital.Interfaces
 		Advanced = 2
 	}
 
-	public class Room
+	public interface ITreatmentLocation : INameable 
+	{
+		TreatmentMachineCapability TreatmentMachineCapability { get; }
+	}
+
+	public interface INameable
+	{
+		string Name { get; }
+	}
+
+	public class Room : ITreatmentLocation
 	{
 		public Room(string name, TreatmentMachineCapability treatmentMachineCapability)
 		{
 			Name = name;
 			TreatmentMachineCapability = treatmentMachineCapability;
-
 		}
 
 		public string Name { get; }
 
 		public TreatmentMachineCapability TreatmentMachineCapability { get; }
 	}
-	
 
-	public class PatientRegistration
+
+	public class Registration<T> : IRegistration<T>
 	{
-		public PatientRegistration(Patient patient, DateTime timeOfRegistration)
+		public Registration(T item, DateTime timeOfRegistration)
 		{
-			Patient = patient;
+			Item = item;
 			TimeOfRegistration = timeOfRegistration;
 		}
 
-		public Patient Patient { get; }
+		public T Item { get; }
 
 		public DateTime TimeOfRegistration { get; }
 	}
 
+	public interface IRegistration<out T>
+	{
+		T Item { get; }
+
+		DateTime TimeOfRegistration { get; }
+}
+
 
 	public class Consultation
 	{
-		public Consultation(Patient patient, Doctor doctor, Room room, DateTime scheduledDate)
+		public Consultation(IPatient patient, ITreater doctor, ITreatmentLocation room, DateTime scheduledDate)
 		{
 			Patient = patient;
 			Doctor = doctor;
@@ -138,68 +160,28 @@ namespace RayHospital.Interfaces
 			ScheduledDate = scheduledDate;
 		}
 
-		public Patient Patient { get; }
+		public IPatient Patient { get; }
 
-		public Doctor Doctor { get; }
+		public ITreater Doctor { get; }
 
-		public Room Room { get; }
+		public ITreatmentLocation Room { get; }
 
 		public DateTime ScheduledDate { get; set; }
 	}
 
-	
-	public interface IConsultationScheduler
+	public class Hospital
 	{
-		Consultation ScheduleConsultation(PatientRegistration patientRegistration);
-
-		IEnumerable<Consultation> ScheduledConsultations { get; }
-	}
-
-	public class Hospital : IConsultationScheduler
-	{
-		private readonly IEnumerable<Doctor> _doctors;
-		private readonly IEnumerable<Room> _rooms;
-		private readonly ICollection<Consultation> _consultations;
-
-		public Hospital(IEnumerable<Doctor> doctors, IEnumerable<Room> rooms)
+		public Hospital(IReadOnlyCollection<ITreater> doctors, IReadOnlyCollection<ITreatmentLocation> rooms, ICollection<Consultation> scheduledConsultations)
 		{
-			_rooms = rooms;
-			_doctors = doctors;
-			_consultations = new List<Consultation>();
+			Doctors = doctors;
+			Rooms = rooms;
+			ScheduledScheduledConsultations = scheduledConsultations;
 		}
 
-		public IEnumerable<Doctor> Doctors { get; }
+		public IReadOnlyCollection<ITreater> Doctors { get; }
 
-		public IEnumerable<Room> Rooms { get; }
+		public IReadOnlyCollection<ITreatmentLocation> Rooms { get; }
 
-		public IEnumerable<Consultation> ScheduledConsultations => _consultations;
-
-		public Consultation ScheduleConsultation(PatientRegistration patientRegistration)
-		{
-			var requestedConsultationDateOffset = 1;
-			
-			while(true)
-			{
-				var requestedDate = patientRegistration.TimeOfRegistration.AddDays(requestedConsultationDateOffset).Date;
-
-				var sameDayConsultations = ScheduledConsultations.Where(consultation => consultation.ScheduledDate.Date.Equals(requestedDate)).ToList();
-
-				var firstAvailableDoctor = _doctors.Except(sameDayConsultations.Select(sameDayConsultation => sameDayConsultation.Doctor)).FirstOrDefault(doctor => doctor.Roles.Contains(patientRegistration.Patient.TreatableCondition.RequiredDoctorRole));
-
-				if(firstAvailableDoctor != null)
-				{
-					var firstAvailableRoom = _rooms.Except(sameDayConsultations.Select(sameDayConsultation => sameDayConsultation.Room)).FirstOrDefault(room => room.TreatmentMachineCapability >= patientRegistration.Patient.TreatableCondition.MinimumTreatmentMachineCapability);
-
-					if(firstAvailableRoom != null)
-					{
-						var consultation = new Consultation(patientRegistration.Patient, firstAvailableDoctor, firstAvailableRoom, requestedDate);
-						_consultations.Add(consultation);
-						return consultation;
-					}
-				}
-
-				requestedConsultationDateOffset++;
-			}
-		}
+		public ICollection<Consultation> ScheduledScheduledConsultations { get; }
 	}
 }
