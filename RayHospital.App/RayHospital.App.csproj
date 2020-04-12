@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RayHospital.Resources\RayHospital.Resources.csproj" />
     <ProjectReference Include="..\RayHospital.Interfaces\RayHospital.Interfaces.csproj" />
   </ItemGroup>
 

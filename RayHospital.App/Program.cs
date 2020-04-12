@@ -10,8 +10,6 @@ namespace RayHospital.App
 	{
 		private static void Main(string[] commandlineArguments)
 		{
-			#region Input boundry 
-
 			var startDate = DateTime.Today;
 
 			var patientRegistrations = new[]
@@ -45,25 +43,18 @@ namespace RayHospital.App
 
 			var raySearchHospital = new Hospital(doctors, rooms, existingConsultations);
 
-			#endregion
-
-
-			#region Pure region
-
-			var consultations = ConsultationModule.CreateConsultations(patientRegistrations, raySearchHospital);
-
-			#endregion
-
-
-			#region Output boundry
-
-			foreach(var consultation in consultations)
+			void ProduceConsultation(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime date)
 			{
+				var consultation = new Consultation(patient, treater, treatmentLocation, date);
 				raySearchHospital.ScheduledScheduledConsultations.Add(consultation);
-				Console.WriteLine($"Consultation scheduled for {consultation.Patient.Name} with {consultation.Doctor.Name} in room {consultation.Room.Name} at {consultation.ScheduledDate.ToShortDateString()}");
+				Console.WriteLine($"Consultation scheduled for {consultation.Patient.Name} with {consultation.Treater.Name} in room {consultation.TreatmentLocation.Name} at {consultation.Date.ToShortDateString()}");
 			}
 
-			#endregion
+
+			foreach(var patientRegistration in patientRegistrations)
+			{
+				ConsultationModule.ScheduleConsultation(ProduceConsultation, patientRegistration, raySearchHospital.ScheduledScheduledConsultations, raySearchHospital.Doctors, raySearchHospital.Rooms, startDate, startDate.AddYears(1));
+			}
 		}
 	}
 }

@@ -147,26 +147,36 @@ namespace RayHospital.Interfaces
 		T Item { get; }
 
 		DateTime TimeOfRegistration { get; }
-}
-
-
-	public class Consultation
+	}
+	
+	public interface IConsultation
 	{
-		public Consultation(IPatient patient, ITreater doctor, ITreatmentLocation room, DateTime scheduledDate)
+		IPatient Patient { get; }
+
+		ITreater Treater { get; }
+
+		ITreatmentLocation TreatmentLocation { get; }
+
+		DateTime Date { get; }
+	}
+
+	public class Consultation : IConsultation
+	{
+		public Consultation(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime date)
 		{
 			Patient = patient;
-			Doctor = doctor;
-			Room = room;
-			ScheduledDate = scheduledDate;
+			Treater = treater;
+			TreatmentLocation = treatmentLocation;
+			Date = date;
 		}
 
 		public IPatient Patient { get; }
 
-		public ITreater Doctor { get; }
+		public ITreater Treater { get; }
 
-		public ITreatmentLocation Room { get; }
+		public ITreatmentLocation TreatmentLocation { get; }
 
-		public DateTime ScheduledDate { get; set; }
+		public DateTime Date { get; set; }
 	}
 
 	public class Hospital
