@@ -1,5 +1,6 @@
 ﻿using RayHospital.Interfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Linq;
@@ -10,16 +11,21 @@ namespace RayHospital.App
 	{
 		private static void Main(string[] commandlineArguments)
 		{
+			#region Capture
+
 			var startDate = DateTime.Today;
 
-			var patientRegistrations = new[]
-			{
-				new Registration<IPatient>(new Patient("Lucas", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
-				new Registration<IPatient>(new Patient("Sandra", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
-				new Registration<IPatient>(new Patient("Regina", new Cancer(CancerTopography.Breast)), startDate.AddDays(1)),
-				new Registration<IPatient>(new Patient("Jane", new Flu()), startDate.AddDays(1)),
-				new Registration<IPatient>(new Patient("Jack", new Flu()), startDate.AddDays(2)),
-			};
+			var patientRegistrations = new ConcurrentQueue<IRegistration<IPatient>>
+			(
+				new[]
+				{
+					new Registration<IPatient>(new Patient("Lucas", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
+					new Registration<IPatient>(new Patient("Sandra", new Cancer(CancerTopography.HeadNeck)), startDate.AddDays(0)),
+					new Registration<IPatient>(new Patient("Regina", new Cancer(CancerTopography.Breast)), startDate.AddDays(1)),
+					new Registration<IPatient>(new Patient("Jane", new Flu()), startDate.AddDays(1)),
+					new Registration<IPatient>(new Patient("Jack", new Flu()), startDate.AddDays(2)),
+				}
+			);
 
 			var rooms = new[]
 			{
@@ -31,29 +37,70 @@ namespace RayHospital.App
 
 			var doctors = new[]
 			{
-				new Doctor("John", new[] { DoctorRole.Oncologist }),
-				new Doctor("Anna", new[] { DoctorRole.GeneralPractitioner }),
-				new Doctor("Laura", new[] { DoctorRole.Oncologist, DoctorRole.GeneralPractitioner })
+				new Doctor("John", new[] { ITreaterQualifications.Oncologist }),
+				new Doctor("Anna", new[] { ITreaterQualifications.GeneralPractitioner }),
+				new Doctor("Laura", new[] { ITreaterQualifications.Oncologist, ITreaterQualifications.GeneralPractitioner })
 			};
 
-			var existingConsultations = new List<Consultation>
+			var consultations = new List<IConsultation>
 			{
 				new Consultation(new Patient("Ray", new Cancer(CancerTopography.HeadNeck)), doctors.First(), rooms.First(), startDate.AddDays(1))
 			};
 
-			var raySearchHospital = new Hospital(doctors, rooms, existingConsultations);
+			#endregion
 
-			void ProduceConsultation(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime date)
+			#region Side effects
+
+			void ConsultationFound(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime date)
 			{
-				var consultation = new Consultation(patient, treater, treatmentLocation, date);
-				raySearchHospital.ScheduledScheduledConsultations.Add(consultation);
-				Console.WriteLine($"Consultation scheduled for {consultation.Patient.Name} with {consultation.Treater.Name} in room {consultation.TreatmentLocation.Name} at {consultation.Date.ToShortDateString()}");
+				consultations.Add(new Consultation(patient, treater, treatmentLocation, date));
+				Console.WriteLine($"Consultation scheduled for {patient.Name} with {treater.Name} in room {treatmentLocation.Name} at {date.ToShortDateString()}");
 			}
 
+			#endregion
 
-			foreach(var patientRegistration in patientRegistrations)
+			while(patientRegistrations.TryDequeue(out var patientRegistration))
 			{
-				ConsultationModule.ScheduleConsultation(ProduceConsultation, patientRegistration, raySearchHospital.ScheduledScheduledConsultations, raySearchHospital.Doctors, raySearchHospital.Rooms, startDate, startDate.AddYears(1));
+				ScheduleConsultation(ConsultationFound, patientRegistration, consultations, doctors, rooms, startDate, startDate.AddYears(1));
+			}
+		}
+
+		public delegate void ProduceConsultation(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime scheduledDate);
+
+		public static void ScheduleConsultation
+		(
+			ProduceConsultation produceConsultation,
+			IRegistration<IPatient> patientRegistration,
+			IEnumerable<IConsultation> scheduledConsultations,
+			IEnumerable<ITreater> doctors,
+			IEnumerable<ITreatmentLocation> rooms,
+			DateTime scheduleFrom,
+			DateTime scheduleTo
+		)
+		{
+			var earliestSchedulableDate = patientRegistration.TimeOfRegistration.AddDays(1).Date;
+			var date = scheduleFrom.Date < earliestSchedulableDate ? earliestSchedulableDate.Date : scheduleFrom.Date;
+
+			while(date <= scheduleTo)
+			{
+				var sameDayConsultations = scheduledConsultations.Where(consultation => consultation.Date.Date.Equals(date)).ToList();
+
+				var busyDoctors = sameDayConsultations.Select(sameDayConsultation => sameDayConsultation.Treater);
+				var firstAvailableViableDoctor = doctors.Except(busyDoctors).FirstOrDefault(doctor => doctor.Roles.Contains(patientRegistration.Item.TreatableCondition.RequiredTreaterQualifications));
+
+				if(!ReferenceEquals(firstAvailableViableDoctor, null))
+				{
+					var busyRooms = sameDayConsultations.Select(sameDayConsultation => sameDayConsultation.TreatmentLocation);
+					var firstAvailableViableRoom = rooms.Except(busyRooms).FirstOrDefault(room => room.TreatmentMachineCapability >= patientRegistration.Item.TreatableCondition.MinimumTreatmentMachineCapability);
+
+					if(!ReferenceEquals(firstAvailableViableRoom, null))
+					{
+						produceConsultation(patientRegistration.Item, firstAvailableViableDoctor, firstAvailableViableRoom, date);
+						return;
+					}
+				}
+
+				date = date.AddDays(1);
 			}
 		}
 	}
