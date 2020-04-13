@@ -22,9 +22,9 @@ namespace RayHospital.App
 
 	public class BreastCancer : Cancer
 	{
-		public BreastCancer(): base("Breast cancer", CancerTopography.Breast, TreatmentMachineCapability.Simple)
+		public BreastCancer() : base("Breast cancer", CancerTopography.Breast, TreatmentMachineCapability.Simple)
 		{
-			
+
 		}
 	}
 

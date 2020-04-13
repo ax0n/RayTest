@@ -1,14 +1,14 @@
+using RayHospital.Interfaces;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Bson;
-using RayHospital.Interfaces;
-using RayHospital.Lib;
 using Xunit;
 
 namespace RayHospital.Lib.Tests
 {
 	public class ScheduleConsultationTests
 	{
+		#region TestTypes
+
 		private class FakeCondition : ITreatableCondition
 		{
 			public FakeCondition(string name, TreaterQualification requiredTreaterQualification, TreatmentMachineCapability minimumTreatmentMachineCapability)
@@ -95,6 +95,8 @@ namespace RayHospital.Lib.Tests
 			
 			public DateTime Date { get; }
 		}
+
+		#endregion
 
 		[Theory]
 		[InlineData(-100)]

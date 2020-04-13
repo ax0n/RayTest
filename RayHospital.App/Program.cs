@@ -38,10 +38,7 @@ namespace RayHospital.App
 				new Doctor("Laura", new[] { TreaterQualification.Oncologist, TreaterQualification.GeneralPractitioner })
 			};
 
-			var consultations = new List<IConsultation>
-			{
-				new Consultation(new Patient("Ray", new HeadNeckCancer()), doctors.First(), rooms.First(), startDate.AddDays(1))
-			};
+			var consultations = new List<Consultation>();
 
 			#endregion
 
@@ -49,8 +46,9 @@ namespace RayHospital.App
 
 			void ProduceConsultation(IPatient patient, ITreater treater, ITreatmentLocation treatmentLocation, DateTime date)
 			{
-				consultations.Add(new Consultation(patient, treater, treatmentLocation, date));
-				Console.WriteLine($"Consultation scheduled for {patient.Name} with {treater.Name} in room {treatmentLocation.Name} at {date.ToShortDateString()}");
+				var consultation = new Consultation(patient, treater, treatmentLocation, date);
+				consultations.Add(consultation);
+				Console.WriteLine($"Consultation scheduled for {patient.Name} with Dr {treater.Name} in {treatmentLocation.Name} at {date.ToShortDateString()}");
 			}
 
 			#endregion

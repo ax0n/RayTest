@@ -4,7 +4,7 @@ namespace RayHospital.App
 {
 	public class Flu : ITreatableCondition
 	{
-		public string Name { get; }
+		public string Name => "Flu";
 
 		public TreaterQualification RequiredTreaterQualification => TreaterQualification.GeneralPractitioner;
 
