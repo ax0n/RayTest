@@ -1,35 +1,38 @@
-﻿using System;
-using RayHospital.Interfaces;
+﻿using RayHospital.Interfaces;
 
 namespace RayHospital.App
 {
-	public class Cancer : ITreatableCondition
+	public abstract class Cancer : ITreatableCondition
 	{
-		public Cancer(CancerTopography topography)
+		protected Cancer(string name, CancerTopography topography, TreatmentMachineCapability minimumTreatmentMachineCapability)
 		{
+			Name = name;
 			Topography = topography;
+			MinimumTreatmentMachineCapability = minimumTreatmentMachineCapability;
 		}
 
 		public string Name { get; }
 
 		public CancerTopography Topography { get; }
 
-		public TreaterQualifications RequiredTreaterQualifications => TreaterQualifications.Oncologist;
+		public TreatmentMachineCapability MinimumTreatmentMachineCapability { get; }
 
-		public TreatmentMachineCapability MinimumTreatmentMachineCapability
+		public TreaterQualification RequiredTreaterQualification => TreaterQualification.Oncologist;
+	}
+
+	public class BreastCancer : Cancer
+	{
+		public BreastCancer(): base("Breast cancer", CancerTopography.Breast, TreatmentMachineCapability.Simple)
 		{
-			get
-			{
-				switch(Topography)
-				{
-					case CancerTopography.Breast:
-						return TreatmentMachineCapability.Simple;
-					case CancerTopography.HeadNeck:
-						return TreatmentMachineCapability.Advanced;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
+			
+		}
+	}
+
+	public class HeadNeckCancer : Cancer
+	{
+		public HeadNeckCancer() : base("Head & Neck cancer", CancerTopography.HeadNeck, TreatmentMachineCapability.Advanced)
+		{
+
 		}
 	}
 }

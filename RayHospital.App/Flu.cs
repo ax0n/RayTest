@@ -6,7 +6,7 @@ namespace RayHospital.App
 	{
 		public string Name { get; }
 
-		public TreaterQualifications RequiredTreaterQualifications => TreaterQualifications.GeneralPractitioner;
+		public TreaterQualification RequiredTreaterQualification => TreaterQualification.GeneralPractitioner;
 
 		public TreatmentMachineCapability MinimumTreatmentMachineCapability => TreatmentMachineCapability.None;
 	}

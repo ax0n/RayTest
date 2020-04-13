@@ -2,7 +2,7 @@
 {
 	public interface ITreatableCondition : INameable
 	{
-		TreaterQualifications RequiredTreaterQualifications { get; }
+		TreaterQualification RequiredTreaterQualification { get; }
 
 		TreatmentMachineCapability MinimumTreatmentMachineCapability { get; }
 	}

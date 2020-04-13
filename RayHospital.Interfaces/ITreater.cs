@@ -4,6 +4,6 @@ namespace RayHospital.Interfaces
 {
 	public interface ITreater : INameable
 	{
-		IEnumerable<TreaterQualifications> Roles { get; }
+		IEnumerable<TreaterQualification> Qualifications { get; }
 	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace RayHospital.Interfaces
 {
-	public enum TreaterQualifications
+	public enum TreaterQualification
 	{
 		GeneralPractitioner,
 		Oncologist

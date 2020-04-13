@@ -5,14 +5,14 @@ namespace RayHospital.App
 {
 	public class Doctor : ITreater
 	{
-		public Doctor(string name, IEnumerable<TreaterQualifications> roles)
+		public Doctor(string name, IEnumerable<TreaterQualification> roles)
 		{
 			Name = name;
-			Roles = roles;
+			Qualifications = roles;
 		}
 
 		public string Name { get; }
 
-		public IEnumerable<TreaterQualifications> Roles { get; }
+		public IEnumerable<TreaterQualification> Qualifications { get; }
 	}
 }
